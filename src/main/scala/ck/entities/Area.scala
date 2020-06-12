@@ -4,7 +4,7 @@ package entities
 case class Area(x1: Int, y1: Int, x2: Int, y2: Int) { lhs =>
   import Area._
 
-  require(x1 <= x2 && y1 <= y2)
+  require(x1 <= x2 && y1 <= y2, s"$x1, $x2, $y1, $y2")
 
   def intersects(rhs: Area): Boolean =
     segmentIntersects(lhs.x1, lhs.x2, rhs.x1, rhs.x2) &&
@@ -66,11 +66,6 @@ object Area {
     from(coordinates.x, coordinates.y, width, height)
 
   @throws[java.lang.IllegalArgumentException]("if width and height are not non-negative integers.")
-  def from(coordinates: Coordinates, size: Size, rotation: Rotation): Area =
-    rotation match {
-      case Rotation.Zero | Rotation.Twice  =>
-        from(coordinates, size.width, size.height)
-      case Rotation.Once | Rotation.Triple =>
-        from(coordinates, size.height, size.width)
-    }
+  def from(coordinates: Coordinates, size: Size): Area =
+    from(coordinates, size.width, size.height)
 }

@@ -5,7 +5,7 @@ package gamedata
 import cats.data._
 import cats.implicits._
 
-case class Town(segments: NonEmptyMap[Int, TownSegment]) {
+case class SgTreeTown(segments: NonEmptyMap[Int, TownSegment]) {
   val segmentTree: SegmentTree = {
     val chunksWithSegmentId: NonEmptyList[(Area, Int)] =
       segments.toNel.flatMap {
@@ -28,17 +28,10 @@ case class Town(segments: NonEmptyMap[Int, TownSegment]) {
     segments.lookup(dataId)
 }
 
-object Town {
-  def fromNonEmptyChain(segments: NonEmptyChain[TownSegment]): Town =
+object SgTreeTown {
+  def fromNonEmptyChain(segments: NonEmptyChain[TownSegment]): SgTreeTown =
     apply(segments.toNonEmptyMapBy(_.id))
 }
-
-case class TownSegment(
-  id: Int,
-  isUnlocked: Boolean,
-  prerequisiteSegments: Chain[Int],
-  chunks: NonEmptyChain[Area]
-)
 
 /**
   * y +
@@ -66,7 +59,8 @@ sealed trait SegmentTree {
 object SegmentTree {
   case class Single(area: Area, townSegmentId: Option[Int]) extends SegmentTree {
     def addChunk(chunk: Area, townSegmentId: Int): SegmentTree =
-      if (chunk contains area) copy(townSegmentId = Some(townSegmentId))
+      if (!(area contains chunk)) this
+      else if (chunk contains area) copy(townSegmentId = Some(townSegmentId))
       else divide.addChunk(chunk, townSegmentId)
 
     def divide: Divided = {
@@ -82,7 +76,8 @@ object SegmentTree {
     }
 
     def findIntersectSegmentId(area: Area, targetSegmentIds: Set[Int]): Option[Int] =
-      if (this.area.intersects(area) && townSegmentId.exists(targetSegmentIds contains)) townSegmentId
+      if (!(this.area contains area)) None
+      else if (this.area.intersects(area) && townSegmentId.exists(targetSegmentIds contains)) townSegmentId
       else None
   }
 
@@ -94,7 +89,8 @@ object SegmentTree {
     ru: SegmentTree
   ) extends SegmentTree {
     def addChunk(chunk: Area, townSegmentId: Int): SegmentTree =
-      if (chunk contains area) Single(area, townSegmentId = Some(townSegmentId))
+      if (!(area contains chunk)) this
+      else if (chunk contains area) Single(area, townSegmentId = Some(townSegmentId))
       else
         copy(
           ld = ld.addChunk(chunk, townSegmentId),
@@ -104,7 +100,8 @@ object SegmentTree {
         )
 
     def findIntersectSegmentId(area: Area, targetSegmentIds: Set[Int]): Option[Int] =
-      if (this.area.intersects(area))
+      if (!(this.area contains area)) None
+      else if (this.area.intersects(area))
         ld.findIntersectSegmentId(area, targetSegmentIds) orElse
           lu.findIntersectSegmentId(area, targetSegmentIds) orElse
           rd.findIntersectSegmentId(area, targetSegmentIds) orElse

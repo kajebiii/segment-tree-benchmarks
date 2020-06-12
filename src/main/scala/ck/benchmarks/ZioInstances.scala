@@ -55,9 +55,13 @@ object ZioInstances {
       }
     }
 
-  implicit val m1: Monad[P]                     = zioMonad[Env, Chain[Event], State]
-  implicit val m2: ApplicativeAsk[P, Env]       = zioApplicativeAsk[Env, Chain[Event], State]
-  implicit val m3: FunctorTell[P, Chain[Event]] = zioFunctorTell[Env, Chain[Event], State]
-  implicit val m4: MonadState[P, State]         = zioMonadState[Env, Chain[Event], State]
+  implicit val m1: Monad[SgTreeP]                     = zioMonad[SgTreeEnv, Chain[SgTreeEvent], SgTreeState]
+  implicit val m2: ApplicativeAsk[SgTreeP, SgTreeEnv]       = zioApplicativeAsk[SgTreeEnv, Chain[SgTreeEvent], SgTreeState]
+  implicit val m3: FunctorTell[SgTreeP, Chain[SgTreeEvent]] = zioFunctorTell[SgTreeEnv, Chain[SgTreeEvent], SgTreeState]
+  implicit val m4: MonadState[SgTreeP, SgTreeState]         = zioMonadState[SgTreeEnv, Chain[SgTreeEvent], SgTreeState]
 
+  implicit val m5: Monad[BaseP]                     = zioMonad[BaseEnv, Chain[BaseEvent], BaseState]
+  implicit val m6: ApplicativeAsk[BaseP, BaseEnv]       = zioApplicativeAsk[BaseEnv, Chain[BaseEvent], BaseState]
+  implicit val m7: FunctorTell[BaseP, Chain[BaseEvent]] = zioFunctorTell[BaseEnv, Chain[BaseEvent], BaseState]
+  implicit val m8: MonadState[BaseP, BaseState]         = zioMonadState[BaseEnv, Chain[BaseEvent], BaseState]
 }

@@ -1,5 +1,5 @@
 import cats.Order
-import cats.data.{NonEmptyChain, NonEmptyMap}
+import cats.data.{Chain, NonEmptyChain, NonEmptyMap}
 import cats.implicits._
 
 package object ck {
@@ -21,5 +21,19 @@ package object ck {
 
       NonEmptyMap.of(head, tail.toList: _*)
     }
+  }
+
+  implicit class COps[A](val chain: Chain[A]) extends AnyVal {
+    def toSeq: Seq[A] =
+      chain.iterator.toSeq
+
+    def toSet[B >: A]: Set[B] =
+      chain.iterator.toSet
+
+    def toMap[T, U](implicit ev: A <:< (T, U)): Map[T, U] =
+      chain.iterator.toMap
+
+    def toMapBy[K](f: A => K): Map[K, A] =
+      chain.map(a => f(a) -> a).iterator.toMap
   }
 }
