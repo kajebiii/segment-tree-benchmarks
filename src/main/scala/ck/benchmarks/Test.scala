@@ -8,8 +8,6 @@ import cats.mtl.{ApplicativeAsk, FunctorTell, MonadState}
 import ck.benchmarks.ZioInstances.ZIOReaderWriterState
 import ck.entities._
 
-import scala.collection.immutable.TreeSet
-
 object Test {
   case class SgTreeEnv(town: gamedata.SgTreeTown)
   case class SgTreeEvent()

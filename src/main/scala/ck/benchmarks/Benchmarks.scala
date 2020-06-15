@@ -3,10 +3,10 @@ package ck.benchmarks
 import java.util.concurrent.TimeUnit
 import scala.language.{ higherKinds, postfixOps }
 import cats.data.{Chain, NonEmptyChain}
-import cats.effect.IO
 import org.openjdk.jmh.annotations.{ State => S, _ }
 import zio.internal.Platform
 import zio.{ BootstrapRuntime, Ref, Runtime, ZEnv, ZLayer }
+
 import ck.benchmarks.Test._
 import ck.benchmarks.ZioInstances._
 import ck.entities._
