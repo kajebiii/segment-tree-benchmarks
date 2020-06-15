@@ -31,13 +31,11 @@ object Test {
       .map { structure =>
         for {
           town <- reader.ask.map(_.town)
-          townSegments = town.segments.toSortedMap
           segmentTree = town.segmentTree
           unlockedSegments <- state.get.map(_.unlockedSegments)
-          lockedSegmentIds = (townSegments -- unlockedSegments).keySet
           area = Area.from(structure.coordinates, structure.size)
           isInUnlocked = segmentTree.forall(area) {
-            case Some(id) => !lockedSegmentIds.contains(id)
+            case Some(id) => unlockedSegments.contains(id)
             case None => false
           }
         } yield isInUnlocked
@@ -53,14 +51,12 @@ object Test {
       .map { structure =>
         for {
           town <- reader.ask.map(_.town)
-          townSegments = town.segments.toSortedMap
           segmentTree = town.segmentTree
           unlockedSegments <- state.get.map(_.unlockedSegments)
-          lockedSegmentIds = (townSegments -- unlockedSegments).keySet
           area = Area.from(structure.coordinates, structure.size)
           intersectSegmentIds = segmentTree.getAllIntersectAreaKeys(area)
           isInUnlocked = intersectSegmentIds.forall {
-            case Some(id) => !lockedSegmentIds.contains(id)
+            case Some(id) => unlockedSegments.contains(id)
             case None => false
           }
         } yield isInUnlocked

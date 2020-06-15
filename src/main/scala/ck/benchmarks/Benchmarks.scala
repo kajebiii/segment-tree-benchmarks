@@ -82,4 +82,23 @@ class Benchmarks {
   @Benchmark
   def benchmarkBaseFilter(): Unit =
     runtime.unsafeRun(testBaseFilter[BaseP](structures).provideLayer(baseLayer))
+
+//    def test(): Unit = {
+//      val a = runtime.unsafeRun(testSgTreeForall[SgTreeP](structures).provideLayer(sgTreeLayer))
+//      val b = runtime.unsafeRun(testSgTreeGetAll[SgTreeP](structures).provideLayer(sgTreeLayer))
+//      val c = runtime.unsafeRun(testSgTreeFindAndContains[SgTreeP](structures).provideLayer(sgTreeLayer))
+//      val d = runtime.unsafeRun(testBaseFind[BaseP](structures).provideLayer(baseLayer))
+//      val e = runtime.unsafeRun(testBaseFilter[BaseP](structures).provideLayer(baseLayer))
+//
+//      val res = structures.toList.zipWithIndex.forall { case (_, index) =>
+//        if (a.get(index) != b.get(index)) false
+//        else if (c.get(index) != b.get(index)) false
+//        else if (c.get(index) != d.get(index)) false
+//        else if (e.get(index) != d.get(index)) false
+//        else true
+//      }
+//      println("finish", res)
+//
+//      ()
+//    }
 }
