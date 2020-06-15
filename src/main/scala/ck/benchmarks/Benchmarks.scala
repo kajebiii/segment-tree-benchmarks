@@ -68,4 +68,8 @@ class Benchmarks {
   @Benchmark
   def benchmarkBase(): Unit =
     runtime.unsafeRun(testBase[BaseP](structures).provideLayer(baseLayer))
+
+  @Benchmark
+  def benchmarkBaseFilter(): Unit =
+    runtime.unsafeRun(testBaseFilter[BaseP](structures).provideLayer(baseLayer))
 }

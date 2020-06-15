@@ -12,11 +12,32 @@ case class SgTreeTown(segments: NonEmptyMap[Int, TownSegment]) {
         case (segmentId, townSegment) =>
           townSegment.chunks.toNonEmptyList.map(_ -> segmentId)
       }
-    val boundary: Area                                    =
+    val boundaryFromChunks: Area                                    =
       chunksWithSegmentId.map(_._1).reduceLeft[Area] {
         case (lhs, rhs) =>
           Area(lhs.x1 min rhs.x1, lhs.y1 min rhs.y1, lhs.x2 max rhs.x2, lhs.y2 max rhs.y2)
       }
+
+    def getEqualOrGreaterPowerOfTwo(target: Int): Int = {
+      @scala.annotation.tailrec
+      def _getEqualOrGreaterPowerOfTwo(number: Int, result: Int): Int =
+        if (number == 0) result
+        else _getEqualOrGreaterPowerOfTwo(number / 2, result * 2)
+
+      _getEqualOrGreaterPowerOfTwo(target, 1)
+    }
+
+    val maxLength: Int =
+      getEqualOrGreaterPowerOfTwo(
+        ((boundaryFromChunks.x2 - boundaryFromChunks.x1 + 2) max (boundaryFromChunks.y2 - boundaryFromChunks.y1 + 2)) + 1
+      )
+    val boundary: Area =
+      boundaryFromChunks.copy(
+        boundaryFromChunks.x1 - 1,
+        boundaryFromChunks.y1 - 1,
+        boundaryFromChunks.x1 - 1 + maxLength - 1,
+        boundaryFromChunks.y1 - 1 + maxLength - 1,
+      )
 
     chunksWithSegmentId.foldLeft[SegmentTree](SegmentTree.Single(boundary, None)) {
       case (acc, (chunk, townSegmentId)) =>
@@ -59,7 +80,7 @@ sealed trait SegmentTree {
 object SegmentTree {
   case class Single(area: Area, townSegmentId: Option[Int]) extends SegmentTree {
     def addChunk(chunk: Area, townSegmentId: Int): SegmentTree =
-      if (!(area contains chunk)) this
+      if (!area.intersects(chunk)) this
       else if (chunk contains area) copy(townSegmentId = Some(townSegmentId))
       else divide.addChunk(chunk, townSegmentId)
 
@@ -76,7 +97,7 @@ object SegmentTree {
     }
 
     def findIntersectSegmentId(area: Area, targetSegmentIds: Set[Int]): Option[Int] =
-      if (!(this.area contains area)) None
+      if (!this.area.intersects(area)) None
       else if (this.area.intersects(area) && townSegmentId.exists(targetSegmentIds contains)) townSegmentId
       else None
   }
@@ -89,7 +110,7 @@ object SegmentTree {
     ru: SegmentTree
   ) extends SegmentTree {
     def addChunk(chunk: Area, townSegmentId: Int): SegmentTree =
-      if (!(area contains chunk)) this
+      if (!area.intersects(chunk)) this
       else if (chunk contains area) Single(area, townSegmentId = Some(townSegmentId))
       else
         copy(
@@ -100,7 +121,8 @@ object SegmentTree {
         )
 
     def findIntersectSegmentId(area: Area, targetSegmentIds: Set[Int]): Option[Int] =
-      if (!(this.area contains area)) None
+      if (!this.area.intersects(area))
+        None
       else if (this.area.intersects(area))
         ld.findIntersectSegmentId(area, targetSegmentIds) orElse
           lu.findIntersectSegmentId(area, targetSegmentIds) orElse

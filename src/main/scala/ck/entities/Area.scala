@@ -35,8 +35,8 @@ case class Area(x1: Int, y1: Int, x2: Int, y2: Int) { lhs =>
     )
 
   def divide: (Area, Area, Area, Area) = {
-    val xm = (x1 + x2) / 2
-    val ym = (y1 + y2) / 2
+    val xm = (x1 + x2) >> 1
+    val ym = (y1 + y2) >> 1
 
     (
       Area(x1, y1, xm, ym),
