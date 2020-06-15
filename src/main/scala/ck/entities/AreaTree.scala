@@ -27,6 +27,10 @@ sealed trait AreaTree[K] {
   def findIntersectAreaKey(area: Area, targetKeys: Set[K]): Option[K]
   // key 가 등록된 area 영역들에 포함되어 있는지를 반환합니다.
   def contains(area: Area): Boolean
+  // area 와 intersect 하는 영역의 모든 Option[K] 를 반환합니다.
+  def getAllIntersectAreaKeys(area: Area): Set[Option[K]]
+  // area 와 intersect 하는 모든 key 가 조건을 만족하는지 검사합니다.
+  def forall(area: Area)(p: Option[K] => Boolean): Boolean
 }
 
 object AreaTree {
@@ -91,6 +95,14 @@ object AreaTree {
     def contains(area: Area): Boolean =
       if (!this.area.intersects(area)) true
       else townSegmentId.isDefined
+
+    def getAllIntersectAreaKeys(area: Area): Set[Option[K]] =
+      if (!this.area.intersects(area)) Set.empty
+      else Set(townSegmentId)
+
+    def forall(area: Area)(p: Option[K] => Boolean): Boolean =
+      if (!this.area.intersects(area)) true
+      else p(townSegmentId)
   }
 
   case class Divided[K](
@@ -121,9 +133,15 @@ object AreaTree {
         None
 
     def contains(area: Area): Boolean =
-      if (!this.area.intersects(area))
-        true
-      else
-        ld.contains(area) && lu.contains(area) && rd.contains(area) && ru.contains(area)
+      if (!this.area.intersects(area)) true
+      else ld.contains(area) && lu.contains(area) && rd.contains(area) && ru.contains(area)
+
+    def getAllIntersectAreaKeys(area: Area): Set[Option[K]] =
+      if (!this.area.intersects(area)) Set.empty
+      else ld.getAllIntersectAreaKeys(area) ++ lu.getAllIntersectAreaKeys(area) ++ rd.getAllIntersectAreaKeys(area) ++ ru.getAllIntersectAreaKeys(area)
+
+    def forall(area: Area)(p: Option[K] => Boolean): Boolean =
+      if (!this.area.intersects(area)) true
+      else ld.forall(area)(p) && lu.forall(area)(p) && rd.forall(area)(p) && ru.forall(area)(p)
   }
 }

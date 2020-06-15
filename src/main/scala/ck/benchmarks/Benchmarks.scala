@@ -14,7 +14,7 @@ import ck.entities._
 @S(Scope.Thread)
 @BenchmarkMode(Array(Mode.Throughput))
 @OutputTimeUnit(TimeUnit.SECONDS)
-@Warmup(iterations = 5, time = 3, timeUnit = TimeUnit.SECONDS)
+@Warmup(iterations = 10, time = 3, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 3, timeUnit = TimeUnit.SECONDS)
 @Fork(1)
 class Benchmarks {
@@ -25,8 +25,10 @@ class Benchmarks {
 
   private val maxX = 10
   private val maxY = 10
-  private val chunkWidth = 6
-  private val chunkHeight = 6
+  private val chunkWidth = 16
+  private val chunkHeight = 16
+  private val structureWidth = 5
+  private val structureHeight = 5
 
   private val townSegments: Chain[gamedata.TownSegment] =
     for {
@@ -45,10 +47,10 @@ class Benchmarks {
 
   private val structures: Chain[Structure] =
     for {
-      x <- Chain.fromSeq(-maxX/10 until maxX+maxX/10)
-      y <- Chain.fromSeq(-maxY/10 until maxY+maxY/10)
-      coordinates = Coordinates(x * chunkWidth, y * chunkHeight)
-      size = Size(chunkWidth, chunkHeight)
+      x <- Chain.fromSeq(0 to (maxX + maxX / 10 * 2) * chunkWidth / structureWidth)
+      y <- Chain.fromSeq(0 to (maxY + maxY / 10 * 2) * chunkHeight / structureHeight)
+      coordinates = Coordinates(-maxX / 10 + x * structureWidth, -maxY / 10 + y * structureHeight)
+      size = Size(structureWidth, structureHeight)
     } yield Structure(coordinates, size)
 
   private val sgTreeLayer =
@@ -62,12 +64,20 @@ class Benchmarks {
       ZLayer.succeed(BaseEnv(gamedata.BaseTown(townSegments)))
 
   @Benchmark
-  def benchmarkSgTree(): Unit =
-    runtime.unsafeRun(testSgTree[SgTreeP](structures).provideLayer(sgTreeLayer))
+  def benchmarkSgTreeForall(): Unit =
+    runtime.unsafeRun(testSgTreeForall[SgTreeP](structures).provideLayer(sgTreeLayer))
 
   @Benchmark
-  def benchmarkBase(): Unit =
-    runtime.unsafeRun(testBase[BaseP](structures).provideLayer(baseLayer))
+  def benchmarkSgTreeGetAll(): Unit =
+    runtime.unsafeRun(testSgTreeGetAll[SgTreeP](structures).provideLayer(sgTreeLayer))
+
+  @Benchmark
+  def benchmarkSgTreeFindAndContains(): Unit =
+    runtime.unsafeRun(testSgTreeFindAndContains[SgTreeP](structures).provideLayer(sgTreeLayer))
+
+  @Benchmark
+  def benchmarkBaseFind(): Unit =
+    runtime.unsafeRun(testBaseFind[BaseP](structures).provideLayer(baseLayer))
 
   @Benchmark
   def benchmarkBaseFilter(): Unit =

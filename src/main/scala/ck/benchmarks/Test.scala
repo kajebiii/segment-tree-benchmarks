@@ -22,7 +22,52 @@ object Test {
   type SgTreeP[+A] = ZIOReaderWriterState[SgTreeEnv, Chain[SgTreeEvent], SgTreeState, A]
   type BaseP[+A] = ZIOReaderWriterState[BaseEnv, Chain[BaseEvent], BaseState, A]
 
-  def testSgTree[F[_]: Monad](structures: Chain[Structure])(
+  def testSgTreeForall[F[_]: Monad](structures: Chain[Structure])(
+    implicit reader: ApplicativeAsk[F, SgTreeEnv],
+    writer: FunctorTell[F, Chain[SgTreeEvent]],
+    state: MonadState[F, SgTreeState]
+  ): F[Chain[Boolean]] =
+    structures
+      .map { structure =>
+        for {
+          town <- reader.ask.map(_.town)
+          townSegments = town.segments.toSortedMap
+          segmentTree = town.segmentTree
+          unlockedSegments <- state.get.map(_.unlockedSegments)
+          lockedSegmentIds = (townSegments -- unlockedSegments).keySet
+          area = Area.from(structure.coordinates, structure.size)
+          isInUnlocked = segmentTree.forall(area) {
+            case Some(id) => !lockedSegmentIds.contains(id)
+            case None => false
+          }
+        } yield isInUnlocked
+      }
+      .sequence
+
+  def testSgTreeGetAll[F[_]: Monad](structures: Chain[Structure])(
+    implicit reader: ApplicativeAsk[F, SgTreeEnv],
+    writer: FunctorTell[F, Chain[SgTreeEvent]],
+    state: MonadState[F, SgTreeState]
+  ): F[Chain[Boolean]] =
+    structures
+      .map { structure =>
+        for {
+          town <- reader.ask.map(_.town)
+          townSegments = town.segments.toSortedMap
+          segmentTree = town.segmentTree
+          unlockedSegments <- state.get.map(_.unlockedSegments)
+          lockedSegmentIds = (townSegments -- unlockedSegments).keySet
+          area = Area.from(structure.coordinates, structure.size)
+          intersectSegmentIds = segmentTree.getAllIntersectAreaKeys(area)
+          isInUnlocked = intersectSegmentIds.forall {
+            case Some(id) => !lockedSegmentIds.contains(id)
+            case None => false
+          }
+        } yield isInUnlocked
+      }
+      .sequence
+
+  def testSgTreeFindAndContains[F[_]: Monad](structures: Chain[Structure])(
     implicit reader: ApplicativeAsk[F, SgTreeEnv],
     writer: FunctorTell[F, Chain[SgTreeEvent]],
     state: MonadState[F, SgTreeState]
@@ -42,7 +87,7 @@ object Test {
       }
       .sequence
 
-  def testBase[F[_]: Monad](structures: Chain[Structure])(
+  def testBaseFind[F[_]: Monad](structures: Chain[Structure])(
     implicit reader: ApplicativeAsk[F, BaseEnv],
     writer: FunctorTell[F, Chain[BaseEvent]],
     state: MonadState[F, BaseState]
