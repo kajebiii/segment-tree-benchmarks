@@ -46,7 +46,7 @@ class Benchmarks {
   private val structures: Chain[Structure] =
     for {
       x <- Chain.fromSeq(-maxX/10 until maxX+maxX/10)
-      y <- Chain.fromSeq(-maxX/10 until maxY+maxX/10)
+      y <- Chain.fromSeq(-maxY/10 until maxY+maxY/10)
       coordinates = Coordinates(x * chunkWidth, y * chunkHeight)
       size = Size(chunkWidth, chunkHeight)
     } yield Structure(coordinates, size)

@@ -26,7 +26,7 @@ object Test {
     implicit reader: ApplicativeAsk[F, SgTreeEnv],
     writer: FunctorTell[F, Chain[SgTreeEvent]],
     state: MonadState[F, SgTreeState]
-  ): F[Unit] =
+  ): F[Chain[Boolean]] =
     structures
       .map { structure =>
         for {
@@ -36,18 +36,17 @@ object Test {
           unlockedSegments <- state.get.map(_.unlockedSegments)
           lockedSegmentIds = (townSegments -- unlockedSegments).keySet
           area = Area.from(structure.coordinates, structure.size)
-          invalidSegmentId = segmentTree.findIntersectSegmentId(area, lockedSegmentIds)
-          isInUnlocked = invalidSegmentId.isEmpty && segmentTree.findIntersectSegmentId(area, townSegments.keySet).nonEmpty
+          invalidSegmentId = segmentTree.findIntersectAreaKey(area, lockedSegmentIds)
+          isInUnlocked = invalidSegmentId.isEmpty && segmentTree.contains(area)
         } yield isInUnlocked
       }
       .sequence
-      .void
 
   def testBase[F[_]: Monad](structures: Chain[Structure])(
     implicit reader: ApplicativeAsk[F, BaseEnv],
     writer: FunctorTell[F, Chain[BaseEvent]],
     state: MonadState[F, BaseState]
-  ): F[Unit] =
+  ): F[Chain[Boolean]] =
     structures
       .map { structure =>
         def findIntersectSegmentId(area: Area, townSegmentsData: Chain[gamedata.TownSegment]): Option[Int] =
@@ -64,7 +63,7 @@ object Test {
 
           points
             .traverse(findIntersectSegmentId(_, townSegmentsData))
-            .forall(_.nonEmpty)
+            .nonEmpty
         }
 
         for {
@@ -78,13 +77,12 @@ object Test {
         } yield isInUnlocked
       }
       .sequence
-      .void
 
   def testBaseFilter[F[_]: Monad](structures: Chain[Structure])(
     implicit reader: ApplicativeAsk[F, BaseEnv],
     writer: FunctorTell[F, Chain[BaseEvent]],
     state: MonadState[F, BaseState]
-  ): F[Unit] =
+  ): F[Chain[Boolean]] =
     structures
       .map { structure =>
         def findIntersectSegmentId(area: Area, townSegmentsData: Chain[gamedata.TownSegment]): Option[Int] =
@@ -102,7 +100,7 @@ object Test {
 
           points
             .traverse(findIntersectSegmentId(_, townSegmentsData))
-            .forall(_.nonEmpty)
+            .nonEmpty
         }
 
         for {
@@ -116,5 +114,4 @@ object Test {
         } yield isInUnlocked
       }
       .sequence
-      .void
 }
